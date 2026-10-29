@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Northstar Invest</title>
+<style>
+:root{--bg:#080d18;--panel:#111d30;--line:#263650;--text:#eef4ff;--muted:#9babc4;--green:#45d6a0;--red:#ff7777}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:15px Arial,sans-serif}
+header{position:sticky;top:0;background:#0b1220;border-bottom:1px solid var(--line);padding:16px 4%;display:flex;justify-content:space-between;align-items:center;gap:15px;flex-wrap:wrap;z-index:5}
+.brand{font-weight:900;font-size:20px}.brand span{color:var(--green)}
+nav{display:flex;gap:6px;flex-wrap:wrap}
+button{background:var(--green);color:#06130f;border:0;padding:10px 13px;border-radius:8px;cursor:pointer;font-weight:bold}
+nav button,.secondary{background:#1b2940;color:var(--text)}
+nav button.active{outline:1px solid var(--green)}
+input,select{width:100%;padding:11px;border-radius:8px;border:1px solid var(--line);background:#0a1322;color:var(--text)}
+label{display:block;color:var(--muted);font-size:13px;margin:12px 0 5px}
+main{max-width:1250px;margin:auto;padding:24px 4% 50px}
+h1{font-size:34px;margin-bottom:8px}h2{font-size:21px}h3{font-size:17px}
+.muted{color:var(--muted)}.green{color:var(--green)}.red{color:var(--red)}
+.hidden{display:none!important}
+.grid{display:grid;gap:15px}.stats{grid-template-columns:repeat(4,1fr)}
+.cols{grid-template-columns:1.2fr 1fr}.products{grid-template-columns:repeat(3,1fr)}
+.card{background:linear-gradient(140deg,#121e32,#0d1524);border:1px solid var(--line);border-radius:14px;padding:18px;min-width:0}
+.value{font-size:25px;font-weight:bold;margin-top:8px;overflow-wrap:anywhere}
+.section{margin-top:25px}.sectionhead{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.sectionhead h2{margin-bottom:5px}.product p{color:var(--muted);font-size:13px;min-height:35px}
+.product .price{font-weight:bold;font-size:18px}.tag{font-size:11px;color:#bcd2f0;background:#20314a;padding:5px 8px;border-radius:20px}
+.filters{display:flex;gap:10px;margin:15px 0;flex-wrap:wrap}.filters>*{max-width:260px}
+.tablewrap{overflow:auto;border:1px solid var(--line);border-radius:10px}
+table{width:100%;border-collapse:collapse;min-width:600px;background:#0d1626}
+th,td{text-align:left;padding:12px;border-bottom:1px solid var(--line);font-size:13px}
+th{color:var(--muted);background:#142138}tr:last-child td{border-bottom:0}
+.actions{display:flex;gap:6px;flex-wrap:wrap}.actions button{font-size:12px;padding:7px 9px}
+.danger{background:#512a37;color:#ffe1e6}
+.notice{padding:12px;background:#2b2415;border:1px solid #6b5631;border-radius:10px;color:#f5d99c;font-size:13px;margin:18px 0}
+.msg{font-size:13px;margin-top:10px}.empty{padding:25px;text-align:center;color:var(--muted)}
+.auth{max-width:430px;margin:7vh auto;padding:25px;background:var(--panel);border:1px solid var(--line);border-radius:16px}
+.auth h1{font-size:26px}.tabs{display:flex;gap:8px}.tabs button{flex:1}
+.formgrid{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}
+footer{text-align:center;color:#7889a3;font-size:12px;margin-top:35px}
+@media(max-width:850px){.stats{grid-template-columns:repeat(2,1fr)}.products{grid-template-columns:repeat(2,1fr)}.cols{grid-template-columns:1fr}}
+@media(max-width:550px){.products,.formgrid{grid-template-columns:1fr}.stats{grid-template-columns:repeat(2,1fr)}h1{font-size:28px}.value{font-size:21px}}
+</style>
+</head>
+<body>
+
+<section id="authView" class="auth">
+  <div class="brand">NORTHSTAR <span>INVEST</span></div>
+  <p class="muted">Your investment dashboard in one place.</p>
+  <div class="tabs">
+    <button class="secondary" id="loginTab">Log in</button>
+    <button class="secondary" id="registerTab">Create account</button>
+  </div>
+  <form id="authForm">
+    <div id="nameBox" class="hidden">
+      <label>Full name</label><input id="name" autocomplete="name">
+    </div>
+    <label>Email</label><input id="email" type="email" required autocomplete="email">
+    <label>Password</label><input id="password" type="password" minlength="8" required autocomplete="current-password">
+    <button id="authButton" style="width:100%;margin-top:16px">Log in</button>
+    <div id="authMsg" class="msg"></div>
+  </form>
+  <div class="notice">Demo software only. Investment returns shown here are simulations, not guaranteed profits.</div>
+</section>
+
+<div id="app" class="hidden">
+<header>
+  <div class="brand">NORTHSTAR <span>INVEST</span></div>
+  <nav id="nav">
+    <button class="active" data-page="dashboard">Dashboard</button>
+    <button data-page="markets">Markets</button>
+    <button data-page="portfolio">Portfolio</button>
+    <button data-page="activity">Activity</button>
+    <button id="adminNav" class="hidden" data-page="admin">Admin</button>
+  </nav>
+  <div><span id="userLabel" class="muted"></span> <button id="logout" class="secondary">Log out</button></div>
+</header>
+
+<main>
+  <h1 id="greeting">Welcome back.</h1>
+  <p class="muted">Track your demo balance, investments, and account activity.</p>
+  <div class="notice">This is a demo ledger. Deposit requests require admin verification. This website does not send real payments or execute real trades.</div>
+
+  <section id="page-dashboard" class="page">
+    <div class="grid stats">
+      <div class="card"><div class="muted">Available balance</div><div id="balance" class="value">$0.00</div></div>
+      <div class="card"><div class="muted">Invested value</div><div id="invested" class="value">$0.00</div></div>
+      <div class="card"><div class="muted">Simulated profit/loss</div><div id="profit" class="value green">$0.00</div></div>
+      <div class="card"><div class="muted">Account status</div><div id="status" class="value">Active</div></div>
+    </div>
+
+    <div class="grid cols section">
+      <div class="card">
+        <div class="sectionhead"><h2>Portfolio snapshot</h2><button class="secondary" data-goto="portfolio">View portfolio</button></div>
+        <div id="holdings"></div>
+        <div class="sectionhead"><h2>Recent activity</h2><button class="secondary" data-goto="activity">View activity</button></div>
+        <div id="recent"></div>
+      </div>
+
+      <div class="card">
+        <h2>Request a deposit</h2>
+        <form id="depositForm">
+          <label>Amount (USD)</label><input id="depositAmount" type="number" min="1" step=".01" required>
+          <label>Payment reference / notes</label><input id="depositRef" maxlength="160" placeholder="Bank transfer reference">
+          <button style="margin-top:12px">Submit deposit request</button>
+        </form>
+        <hr style="border-color:var(--line);margin:24px 0">
+        <h2>Request a withdrawal</h2>
+        <form id="withdrawForm">
+          <label>Amount (USD)</label><input id="withdrawAmount" type="number" min="1" step=".01" required>
+          <label>Bank name</label><input id="bankName" maxlength="100" required>
+          <label>Account name</label><input id="accountName" maxlength="100" required>
+          <label>Account number</label><input id="accountNumber" maxlength="40" required>
+          <button style="margin-top:12px">Submit withdrawal request</button>
+        </form>
+        <div id="moneyMsg" class="msg"></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="page-markets" class="page hidden">
+    <div class="sectionhead"><h2>Markets</h2><span class="muted">19 demo products</span></div>
+    <div class="filters">
+      <input id="search" placeholder="Search investments…">
+      <select id="category">
+        <option value="">All categories</option>
+        <option>Stocks</option><option>ETFs</option><option>Crypto</option>
+        <option>Commodities</option><option>Real Estate</option><option>Fixed Income</option>
+      </select>
+    </div>
+    <div id="productGrid" class="grid products"></div>
+  </section>
+
+  <section id="page-portfolio" class="page hidden">
+    <div class="sectionhead"><h2>Your portfolio</h2><button class="secondary" id="exportPortfolio">Export CSV</button></div>
+    <div id="portfolioTable"></div>
+  </section>
+
+  <section id="page-activity" class="page hidden">
+    <div class="sectionhead"><h2>Activity & ledger</h2><button class="secondary" id="exportActivity">Export activity CSV</button></div>
+    <div id="activityTable"></div>
+    <div class="section card"><h2>Your withdrawal requests</h2><div id="withdrawalsTable"></div></div>
+    <div class="section card"><h2>Your deposit requests</h2><div id="depositsTable"></div></div>
+  </section>
+
+  <section id="page-admin" class="page hidden">
+    <div class="sectionhead"><h2>Admin console</h2><button class="secondary" id="refreshAdmin">Refresh</button></div>
+    <div class="notice">Only the configured admin account can use these controls. Credits and simulated returns change the demo ledger; they do not move real money.</div>
+
+    <div class="grid cols">
+      <div class="card">
+        <h3>Manual balance credit</h3>
+        <form id="creditForm">
+          <label>Select user</label><select id="creditUser" required></select>
+          <label>Amount (USD)</label><input id="creditAmount" type="number" min=".01" step=".01" required>
+          <label>Reason</label><input id="creditReason" required maxlength="160">
+          <button style="margin-top:12px">Apply credit</button>
+        </form>
+        <div id="adminMsg" class="msg"></div>
+      </div>
+      <div class="card">
+        <h3>Simulated portfolio return</h3>
+        <form id="returnForm">
+          <label>Portfolio position</label><select id="returnPosition" required></select>
+          <label>Return percentage</label><input id="returnPct" type="number" min="-100" max="1000" step=".1" required>
+          <label>Reason</label><input id="returnReason" required maxlength="160">
+          <button style="margin-top:12px">Apply simulation</button>
+        </form>
+      </div>
+    </div>
+
+    <div class="section card"><h2>Deposit queue</h2><div id="adminDeposits"></div></div>
+    <div class="section card"><h2>Withdrawal queue</h2><div id="adminWithdrawals"></div></div>
+    <div class="section card"><h2>Registered users</h2><div id="adminUsers"></div></div>
+  </section>
+
+  <footer>Northstar Invest · Demo software · No real payments or trades are executed</footer>
+</main>
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+
+let mode = "login";
+let me = null;
+let products = [], portfolio = [], activity = [], deposits = [], withdrawals = [];
+
+const money = n => new Intl.NumberFormat("en-US", {
+  style: "currency", currency: "USD"
+}).format(Number(n || 0));
+
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({
+  "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;"
+}[c]));
+
+async function api(url, options = {}) {
+  const response = await fetch(url, {
+    credentials: "same-origin",
+    headers: { "Content-Type": "application/json", ...(options.headers || {}) },
+    ...options
+  });
+
+  let data = {};
+  try { data = await response.json(); } catch {}
+
+  if (!response.ok) throw new Error(data.error || `Request failed (${response.status})`);
+  return data;
+}
+
+function showMessage(selector, message, success = false) {
+  $(selector).textContent = message;
+  $(selector).className = "msg " + (success ? "green" : "red");
+}
+
+function table(headers, rows) {
+  if (!rows.length) return '<div class="empty">Nothing to show yet.</div>';
+  return `<div class="tablewrap"><table>
+    <thead><tr>${headers.map(h => `<th>${h}</th>`).join("")}</tr></thead>
+    <tbody>${rows.join("")}</tbody>
+  </table></div>`;
+}
+
+function goto(page) {
+  $$(".page").forEach(p => p.classList.add("hidden"));
+  $("#page-" + page)?.classList.remove("hidden");
+  $$("#nav button").forEach(b => b.classList.toggle("active", b.dataset.page === page));
+  if (page === "admin") loadAdmin();
+}
+
+$$('#nav button').forEach(b => b.onclick = () => goto(b.dataset.page));
+$$("[data-goto]").forEach(b => b.onclick = () => goto(b.dataset.goto));
+
+$("#loginTab").onclick = () => setMode("login");
+$("#registerTab").onclick = () => setMode("register");
+
+function setMode(next) {
+  mode = next;
+  $("#nameBox").classList.toggle("hidden", mode !== "register");
+  $("#authButton").textContent = mode === "login" ? "Log in" : "Create account";
+  $("#authMsg").textContent = "";
+}
+
+$("#authForm").onsubmit = async e => {
+  e.preventDefault();
+
+  const data = {
+    email: $("#email").value.trim(),
+    password: $("#password").value
+  };
+
+  if (mode === "register") data.name = $("#name").value.trim();
+
+  try {
+    await api("/api/" + (mode === "login" ? "login" : "register"), {
+      method: "POST",
+      body: JSON.stringify(data)
+    });
+
+    await boot();
+  } catch (error) {
+    showMessage("#authMsg", error.message);
+  }
+};
+
+$("#logout").onclick = async () => {
+  try {
+    await api("/api/logout", { method: "POST", body: "{}" });
+  } catch {}
+
+  me = null;
+  $("#app").classList.add("hidden");
+  $("#authView").classList.remove("hidden");
+};
+
+async function boot() {
+  try {
+    const data = await api("/api/me");
+    me = data.user;
+
+    $("#authView").classList.add("hidden");
+    $("#app").classList.remove("hidden");
+
+    await refresh();
+  } catch {
+    $("#app").classList.add("hidden");
+    $("#authView").classList.remove("hidden");
+  }
+}
+
+async function refresh() {
+  const current = await api("/api/me");
+  me = current.user;
+
+  products = (await api("/api/products")).products;
+  portfolio = (await api("/api/portfolio")).portfolio;
+  activity = (await api("/api/activity")).activity;
+  deposits = (await api("/api/deposits")).deposits;
+  withdrawals = (await api("/api/withdrawals")).withdrawals;
+
+  $("#balance").textContent = money(me.balance);
+  $("#invested").textContent = money(portfolio.reduce((s, p) => s + Number(p.currentValue), 0));
+
+  const profit = portfolio.reduce((s, p) => s + Number(p.currentValue) - Number(p.principal), 0);
+  $("#profit").textContent = money(profit);
+  $("#profit").className = "value " + (profit >= 0 ? "green" : "red");
+
+  $("#status").textContent = me.status || "Active";
+  $("#greeting").textContent = "Welcome back, " + me.name.split(" ")[0] + ".";
+  $("#userLabel").textContent = me.email;
+  $("#adminNav").classList.toggle("hidden", me.role !== "admin");
+
+  renderProducts();
+  renderPortfolio();
+  renderActivity();
+
+  if (me.role === "admin") loadAdmin();
+}
+
+function renderProducts() {
+  const query = $("#search").value.toLowerCase();
+  const category = $("#category").value;
+
+  const filtered = products.filter(p =>
+    (!category || p.category === category) &&
+    (p.name + " " + p.category + " " + p.description).toLowerCase().includes(query)
+  );
+
+  $("#productGrid").innerHTML = filtered.map(p => `
+    <article class="card product">
+      <span class="tag">${esc(p.category)} · ${esc(p.risk)} risk</span>
+      <h3>${esc(p.name)}</h3>
+      <p>${esc(p.description)}</p>
+      <div class="sectionhead">
+        <span class="price">${money(p.minInvestment)} <small class="muted">minimum</small></span>
+        <button data-buy="${esc(p.id)}">Invest</button>
+      </div>
+    </article>
+  `).join("") || '<div class="empty">No products match your search.</div>';
+
+  $$("[data-buy]").forEach(button => {
+    button.onclick = () => buy(button.dataset.buy);
+  });
+}
+
+$("#search").oninput = renderProducts;
+$("#category").onchange = renderProducts;
+
+async function buy(productId) {
+  const product = products.find(p => p.id === productId);
+  if (!product) return;
+
+  const value = prompt(
+    `Amount to invest in ${product.name} (USD). Minimum: ${money(product.minInvestment)}`
+  );
+
+  if (value === null) return;
+
+  try {
+    await api("/api/trade", {
+      method: "POST",
+      body: JSON.stringify({ productId, amount: Number(value) })
+    });
+
+    alert("Demo investment recorded.");
+    await refresh();
+  } catch (error) {
+    alert(error.message);
+  }
+}
+
+function renderPortfolio() {
+  const rows = portfolio.map(p => {
+    const pl = Number(p.currentValue) - Number(p.principal);
+
+    return `<tr>
+      <td>${esc(p.productName)}</td>
+      <td>${esc(p.category)}</td>
+      <td>${money(p.principal)}</td>
+      <td>${money(p.currentValue)}</td>
+      <td class="${pl >= 0 ? "green" : "red"}">${money(pl)}</td>
+      <td>${esc(p.status)}</td>
+      <td>${esc(new Date(p.createdAt).toLocaleDateString())}</td>
+    </tr>`;
+  });
+
+  $("#portfolioTable").innerHTML = table(
+    ["Product", "Category", "Invested", "Current value", "P/L", "Status", "Date"],
+    rows
+  );
+
+  $("#holdings").innerHTML = portfolio.length
+    ? table(
+        ["Product", "Invested", "Current value"],
+        portfolio.slice(0, 5).map(p => `
+          <tr><td>${esc(p.productName)}</td><td>${money(p.principal)}</td><td>${money(p.currentValue)}</td></tr>
+        `)
+      )
+    : '<div class="empty">No positions yet. Visit Markets to explore products.</div>';
+
+  $("#returnPosition").innerHTML = portfolio.map(p =>
+    `<option value="${esc(p.id)}">${esc(p.productName)} — ${money(p.currentValue)}</option>`
+  ).join("");
+}
+
+function renderActivity() {
+  $("#activityTable").innerHTML = table(
+    ["Date", "Type", "Description", "Amount", "Status"],
+    activity.map(a => `
+      <tr>
+        <td>${esc(new Date(a.createdAt).toLocaleString())}</td>
+        <td>${esc(a.type)}</td>
+        <td>${esc(a.description)}</td>
+        <td class="${Number(a.amount) >= 0 ? "green" : "red"}">${money(a.amount)}</td>
+        <td>${esc(a.status)}</td>
+      </tr>
+    `)
+  );
+
+  $("#recent").innerHTML = table(
+    ["Type", "Description", "Amount"],
+    activity.slice(0, 5).map(a => `
+      <tr><td>${esc(a.type)}</td><td>${esc(a.description)}</td><td>${money(a.amount)}</td></tr>
+    `)
+  );
+
+  $("#withdrawalsTable").innerHTML = table(
+    ["Date", "Amount", "Bank", "Account", "Status"],
+    withdrawals.map(w => `
+      <tr>
+        <td>${esc(new Date(w.createdAt).toLocaleDateString())}</td>
+        <td>${money(w.amount)}</td>
+        <td>${esc(w.bankName)}</td>
+        <td>${esc(w.accountNumber)}</td>
+        <td>${esc(w.status)}</td>
+      </tr>
+    `)
+  );
+
+  $("#depositsTable").innerHTML = table(
+    ["Date", "Amount", "Reference", "Status"],
+    deposits.map(d => `
+      <tr>
+        <td>${esc(new Date(d.createdAt).toLocaleDateString())}</td>
+        <td>${money(d.amount)}</td>
+        <td>${esc(d.reference || "—")}</td>
+        <td>${esc(d.status)}</td>
+      </tr>
+    `)
+  );
+}
+
+$("#depositForm").onsubmit = async e => {
+  e.preventDefault();
+
+  try {
+    await api("/api/deposits", {
+      method: "POST",
+      body: JSON.stringify({
+        amount: Number($("#depositAmount").value),
+        reference: $("#depositRef").value.trim()
+      })
+    });
+
+    showMessage("#moneyMsg", "Deposit request submitted for admin verification.", true);
+    e.target.reset();
+    await refresh();
+  } catch (error) {
+    showMessage("#moneyMsg", error.message);
+  }
+};
+
+$("#withdrawForm").onsubmit = async e => {
+  e.preventDefault();
+
+  try {
+    await api("/api/withdrawals", {
+      method: "POST",
+      body: JSON.stringify({
+        amount: Number($("#withdrawAmount").value),
+        bankName: $("#bankName").value.trim(),
+        accountName: $("#accountName").value.trim(),
+        accountNumber: $("#accountNumber").value.trim()
+      })
+    });
+
+    showMessage("#moneyMsg", "Withdrawal request submitted for admin review.", true);
+    e.target.reset();
+    await refresh();
+  } catch (error) {
+    showMessage("#moneyMsg", error.message);
+  }
+};
+
+function downloadCSV(filename, rows) {
+  const csv = rows.map(row =>
+    row.map(value => '"' + String(value ?? "").replace(/"/g, '""') + '"').join(",")
+  ).join("\r\n");
+
+  const url = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
+$("#exportActivity").onclick = () => {
+  window.location.href = "/api/activity.csv";
+};
+
+$("#exportPortfolio").onclick = () => {
+  downloadCSV("northstar-portfolio.csv", [
+    ["Product", "Category", "Principal", "Current value", "Status"],
+    ...portfolio.map(p => [p.productName, p.category, p.principal, p.currentValue, p.status])
+  ]);
+};
+
+$("#creditForm").onsubmit = async e => {
+  e.preventDefault();
+
+  try {
+    await api("/api/admin/credit", {
+      method: "POST",
+      body: JSON.stringify({
+        userId: $("#creditUser").value,
+        amount: Number($("#creditAmount").value),
+        reason: $("#creditReason").value.trim()
+      })
+    });
+
+    showMessage("#adminMsg", "Credit recorded.", true);
+    e.target.reset();
+    await refresh();
+  } catch (error) {
+    showMessage("#adminMsg", error.message);
+  }
+};
+
+$("#returnForm").onsubmit = async e => {
+  e.preventDefault();
+
+  try {
+    await api("/api/admin/simulated-return", {
+      method: "POST",
+      body: JSON.stringify({
+        positionId: $("#returnPosition").value,
+        percentage: Number($("#returnPct").value),
+        reason: $("#returnReason").value.trim()
+      })
+    });
+
+    alert("Simulated return recorded.");
+    e.target.reset();
+    await refresh();
+  } catch (error) {
+    alert(error.message);
+  }
+};
+
+async function adminAction(url) {
+  try {
+    await api(url, { method: "POST", body: "{}" });
+    await refresh();
+  } catch (error) {
+    alert(error.message);
+  }
+}
+
+async function loadAdmin() {
+  if (!me || me.role !== "admin") return;
+
+  try {
+    const usersData = await api("/api/admin/users");
+    const users = usersData.users;
+
+    $("#creditUser").innerHTML = users.map(u =>
+      `<option value="${esc(u.id)}">${esc(u.name)} (${esc(u.email)})</option>`
+    ).join("");
+
+    $("#adminUsers").innerHTML = table(
+      ["Name", "Email", "Balance", "Role", "Created"],
+      users.map(u => `
+        <tr>
+          <td>${esc(u.name)}</td><td>${esc(u.email)}</td>
+          <td>${money(u.balance)}</td><td>${esc(u.role)}</td>
+          <td>${esc(new Date(u.createdAt).toLocaleDateString())}</td>
+        </tr>
+      `)
+    );
+
+    const depositData = await api("/api/admin/deposits");
+
+    $("#adminDeposits").innerHTML = table(
+      ["User", "Amount", "Reference", "Status", "Actions"],
+      depositData.deposits.map(d => `
+        <tr>
+          <td>${esc(d.userEmail)}</td><td>${money(d.amount)}</td>
+          <td>${esc(d.reference || "—")}</td><td>${esc(d.status)}</td>
+          <td class="actions">
+            ${d.status === "PENDING"
+              ? `<button data-da="${esc(d.id)}">Approve</button>
+                 <button class="danger" data-dr="${esc(d.id)}">Reject</button>`
+              : "—"}
+          </td>
+        </tr>
+      `)
+    );
+
+    $$("[data-da]").forEach(b => b.onclick = () =>
+      adminAction("/api/admin/deposits/" + b.dataset.da + "/approve")
+    );
+
+    $$("[data-dr]").forEach(b => b.onclick = () =>
+      adminAction("/api/admin/deposits/" + b.dataset.dr + "/reject")
+    );
+
+    const withdrawalData = await api("/api/admin/withdrawals");
+
+    $("#adminWithdrawals").innerHTML = table(
+      ["User", "Amount", "Bank details", "Status", "Actions"],
+      withdrawalData.withdrawals.map(w => `
+        <tr>
+          <td>${esc(w.userEmail)}</td>
+          <td>${money(w.amount)}</td>
+          <td>${esc(w.bankName)} · ${esc(w.accountName)} · ${esc(w.accountNumber)}</td>
+          <td>${esc(w.status)}</td>
+          <td class="actions">
+            ${w.status === "PENDING"
+              ? `<button data-wa="${esc(w.id)}">Approve</button>
+                 <button class="danger" data-wr="${esc(w.id)}">Reject</button>`
+              : w.status === "APPROVED"
+                ? `<button data-wp="${esc(w.id)}">Mark paid</button>`
+                : "—"}
+          </td>
+        </tr>
+      `)
+    );
+
+    $$("[data-wa]").forEach(b => b.onclick = () =>
+      adminAction("/api/admin/withdrawals/" + b.dataset.wa + "/approve")
+    );
+
+    $$("[data-wr]").forEach(b => b.onclick = () =>
+      adminAction("/api/admin/withdrawals/" + b.dataset.wr + "/reject")
+    );
+
+    $$("[data-wp]").forEach(b => b.onclick = () =>
+      adminAction("/api/admin/withdrawals/" + b.dataset.wp + "/mark-paid")
+    );
+  } catch (error) {
+    console.error("Admin panel error:", error);
+  }
+}
+
+$("#refreshAdmin").onclick = loadAdmin;
+
+boot();
+</script>
+</body>
+</html>
