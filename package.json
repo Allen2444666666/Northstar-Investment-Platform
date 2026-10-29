@@ -2,7 +2,7 @@
   "name": "northstar-invest",
   "version": "1.0.0",
   "private": true,
-  "description": "Northstar Invest demo dashboard and backend",
+  "description": "Northstar Invest dashboard and backend",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
